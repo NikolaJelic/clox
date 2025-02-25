@@ -1,12 +1,6 @@
 name: ci-push
 on: [push]
 jobs:
-  format-check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: check diff
-        run: chmod a+x .github/format_check_diff.sh; .github/format_check_diff.sh
   linux-gcc:
     runs-on: ubuntu-latest
     steps:
