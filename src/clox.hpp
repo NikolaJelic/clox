@@ -1,5 +1,7 @@
 #pragma once
+#include "token.hpp"
 #include <string_view>
+#include <vector>
 class Clox
 {
 public:
@@ -8,4 +10,5 @@ public:
   static int run_prompt();
   static int run(std::string_view line);
   static void report(int line, std::string_view message);
+  static void print_tokens(std::vector<Token> const& tokens);
 };
