@@ -1,4 +1,5 @@
 #include "clox.hpp"
+#include <cstdio>
 #include <print>
 
 int main(int argc, char *argv[])
@@ -8,7 +9,7 @@ int main(int argc, char *argv[])
   } else if (argc == 1) {
     Clox::run_prompt();
   } else {
-    std::print("Invalid arguments!");
+    std::print(stderr, "Invalid arguments!");
     return 1;
   }
   return 0;

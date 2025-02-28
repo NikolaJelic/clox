@@ -8,13 +8,29 @@
 #include <charconv>
 #include <cmath>
 #include <print>
+#include <unordered_map>
 #include <utility>
 
-Scanner::Scanner(std::string_view source) : source(source)
-{
-  std::println("Starting scanner on {}", source);
-  scan();
+namespace {
+std::unordered_map<std::string_view, TokenType> const keywords{ { "and", TokenType::AND },
+  { "class", TokenType::CLASS },
+  { "else", TokenType::ELSE },
+  { "false", TokenType::FALSE },
+  { "for", TokenType::FOR },
+  { "fun", TokenType::FUN },
+  { "if", TokenType::IF },
+  { "nil", TokenType::NIL },
+  { "or", TokenType::OR },
+  { "print", TokenType::PRINT },
+  { "return", TokenType::RETURN },
+  { "super", TokenType::SUPER },
+  { "this", TokenType::THIS },
+  { "true", TokenType::TRUE },
+  { "var", TokenType::VAR },
+  { "while", TokenType::WHILE } };
 }
+
+Scanner::Scanner(std::string_view source) : source(source) {}
 
 [[nodiscard]] bool Scanner::end_reached() const { return current >= source.length(); }
 
@@ -29,8 +45,7 @@ void Scanner::add_token(TokenType type) { add_token(type, {}); }
 void Scanner::add_token(TokenType type, LiteralType literal)
 {
   auto lexeme = source.substr(start, current - start);
-  std::println("{}", lexeme);
-  tokens.push_back({ line, type, lexeme, std::move(literal) });
+  tokens.push_back(Token{ .line = line, .type = type, .lexeme = lexeme, .literal = std::move(literal) });
 }
 
 bool Scanner::match(char key)
@@ -64,7 +79,7 @@ void Scanner::scan_string()
   }
 
   if (end_reached()) {
-    Clox::report(line, "Unterminated string");
+    report(line, "Unterminated string");
     return;
   }
 
@@ -85,18 +100,23 @@ void Scanner::scan_number()
   float val = NAN;
   std::string str_val = source.substr(start, current - start);
   auto [ptr, ec] = std::from_chars(str_val.data(), str_val.data() + str_val.size(), val);
-  if (ec == std::errc()) { add_token(TokenType::NUMBER, val); }
+  if (ec == std::errc()) {
+    add_token(TokenType::NUMBER, val);
+  } else {
+    report(line, "Invalid number: " + str_val);
+  }
 }
 
 void Scanner::scan_identifier()
 {
   while (util::is_alphanumeric(peek())) { advance(); }
   std::string lexeme = source.substr(start, current - start);
-  auto it = keywords.find(lexeme);
-  TokenType type = TokenType::IDENTIFIER;
-  if (it != keywords.end()) { type = it->second; }
-
-  add_token(type);
+  auto it = ::keywords.find(lexeme);
+  if (it != ::keywords.end()) {
+    add_token(it->second);
+  } else {
+    add_token(TokenType::IDENTIFIER);
+  }
 }
 
 void Scanner::scan_token()
@@ -171,17 +191,24 @@ void Scanner::scan_token()
     } else if (util::is_alpha(c)) {
       scan_identifier();
     } else {
-      Clox::report(line, "Unexpected character.");
+      report(line, "Unexpected character.");
     }
   }
 }
 
-void Scanner::scan()
+[[nodiscard]] std::pair<bool, std::vector<Token>> Scanner::scan()
 {
   while (!end_reached()) {
     start = current;
     scan_token();
   }
 
-  tokens.push_back({ line, TokenType::END_OF_FILE, "", {} });
+  tokens.push_back(Token{ .line = line, .type = TokenType::END_OF_FILE, .lexeme = "", .literal = {} });
+  return { error, tokens };
+}
+
+void Scanner::report(int line, std::string_view message)
+{
+  error = true;
+  Clox::report(line, message);
 }

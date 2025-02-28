@@ -5,8 +5,8 @@
 
 struct Token
 {
-  int line;
-  TokenType type;
+  int line{};
+  TokenType type{};
   std::string lexeme;
   LiteralType literal;
 };
