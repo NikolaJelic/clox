@@ -1,9 +1,6 @@
 #pragma once
 #include <cstdint>
-#include <string>
-#include <variant>
 
-using LiteralType = std::variant<std::monostate, std::string, bool, float>;
 
 enum struct TokenType : std::uint8_t {
   // Single-character tokens.

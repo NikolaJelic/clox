@@ -1,10 +1,9 @@
 #pragma once
+#include "parsed_tokens.hpp"
 #include "token.hpp"
 #include "token_type.hpp"
 #include <cstddef>
-#include <string>
 #include <string_view>
-#include <utility>
 #include <vector>
 
 class Scanner
@@ -12,7 +11,7 @@ class Scanner
 public:
   explicit Scanner(std::string_view source);
   [[nodiscard]] std::vector<Token> const &get_tokens() const { return tokens; }
-  [[nodiscard]] std::pair<bool, std::vector<Token>> scan();
+  [[nodiscard]] ParsedTokens scan();
 
 private:
   void scan_token();
@@ -24,7 +23,7 @@ private:
   void scan_identifier();
   char advance();
   void add_token(TokenType type);
-  void add_token(TokenType type, LiteralType literal);
+  void add_token(TokenType type, std::optional<LiteralType> literal);
   bool match(char key);
 
   void report(int line, std::string_view message);
@@ -33,7 +32,7 @@ private:
   std::size_t current = 0;
   int line = 1;
 
-  std::string source;
+  std::string_view source;
   std::vector<Token> tokens;
   bool error = false;
 };

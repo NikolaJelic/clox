@@ -2,12 +2,16 @@
 
 
 #include "clox.hpp"
+#include "parsed_tokens.hpp"
 #include "token_type.hpp"
 #include "util.hpp"
 #include <cctype>
 #include <charconv>
 #include <cmath>
+#include <optional>
 #include <print>
+#include <string>
+#include <string_view>
 #include <unordered_map>
 #include <utility>
 
@@ -40,11 +44,11 @@ char Scanner::advance()
   return source.at(current++);
 }
 
-void Scanner::add_token(TokenType type) { add_token(type, {}); }
+void Scanner::add_token(TokenType type) { add_token(type, std::nullopt); }
 
-void Scanner::add_token(TokenType type, LiteralType literal)
+void Scanner::add_token(TokenType type, std::optional<LiteralType> literal)
 {
-  auto lexeme = source.substr(start, current - start);
+  std::string lexeme{ source.substr(start, current - start) };
   tokens.push_back(Token{ .line = line, .type = type, .lexeme = lexeme, .literal = std::move(literal) });
 }
 
@@ -85,32 +89,27 @@ void Scanner::scan_string()
 
   advance();
 
-  std::string value = source.substr(start + 1, current - start - 1);
-  add_token(TokenType::STRING, value);
+  std::string_view value = source.substr(start + 1, current - start - 2);
+  add_token(TokenType::STRING, std::string{ value });
 }
 
 void Scanner::scan_number()
 {
-  while (util::is_digit(peek())) { advance(); }
-  if (peek() == '.' && (util::is_digit(peek_next()))) {
-    advance();
-    while (util::is_digit(peek())) { advance(); }
-  }
-
-  float val = NAN;
-  std::string str_val = source.substr(start, current - start);
+  while (util::is_alphanumeric(peek()) || peek() == '.') { advance(); }
+  double val = NAN;
+  std::string_view str_val = source.substr(start, current - start);
   auto [ptr, ec] = std::from_chars(str_val.data(), str_val.data() + str_val.size(), val);
-  if (ec == std::errc()) {
+  if (ec == std::errc() && ptr == str_val.data() + str_val.size()) {
     add_token(TokenType::NUMBER, val);
   } else {
-    report(line, "Invalid number: " + str_val);
+    report(line, "Invalid number: " + std::string{ str_val });
   }
 }
 
 void Scanner::scan_identifier()
 {
   while (util::is_alphanumeric(peek())) { advance(); }
-  std::string lexeme = source.substr(start, current - start);
+  std::string_view lexeme = source.substr(start, current - start);
   auto it = ::keywords.find(lexeme);
   if (it != ::keywords.end()) {
     add_token(it->second);
@@ -191,20 +190,20 @@ void Scanner::scan_token()
     } else if (util::is_alpha(c)) {
       scan_identifier();
     } else {
-      report(line, "Unexpected character.");
+      report(line, "Unexpected character: " + std::string{ c });
     }
   }
 }
 
-[[nodiscard]] std::pair<bool, std::vector<Token>> Scanner::scan()
+[[nodiscard]] ParsedTokens Scanner::scan()
 {
   while (!end_reached()) {
     start = current;
     scan_token();
   }
 
-  tokens.push_back(Token{ .line = line, .type = TokenType::END_OF_FILE, .lexeme = "", .literal = {} });
-  return { error, tokens };
+  tokens.push_back(Token{ .line = line, .type = TokenType::END_OF_FILE, .lexeme = "", .literal = std::nullopt });
+  return { .error = error, .tokens = tokens };
 }
 
 void Scanner::report(int line, std::string_view message)

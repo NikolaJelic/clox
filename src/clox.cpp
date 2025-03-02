@@ -43,8 +43,8 @@ void Clox::report(int line, std::string_view message) { std::println(stderr, "Er
 void Clox::print_tokens(std::vector<Token> const &tokens)
 {
   for (const auto &token : tokens) {
-    std::print("{} | {} ", token.line, token.lexeme);
-    std::visit(util::VariantVisitor(), token.literal);
+    std::print("{} | {}  ", token.line, token.lexeme);
+    if (token.literal.has_value()) { std::visit(util::VariantVisitor(), token.literal.value()); }
     std::println();
   }
 }

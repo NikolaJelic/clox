@@ -9,7 +9,7 @@ int main(int argc, char *argv[])
   } else if (argc == 1) {
     Clox::run_prompt();
   } else {
-    std::print(stderr, "Invalid arguments!");
+    std::println(stderr, "Invalid arguments!");
     return 1;
   }
   return 0;
