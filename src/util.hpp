@@ -10,11 +10,9 @@ constexpr bool is_digit(char c) noexcept { return c >= '0' && c <= '9'; }
 
 constexpr bool is_alphanumeric(char c) noexcept { return is_alpha(c) || is_digit(c); }
 
-struct VariantVisitor
+template<class... Ts> struct overloads : Ts...
 {
-  void operator()(const std::monostate & /*unused*/) { std::print("_"); }
-
-  template<typename T> void operator()(const T &value) { std::print("{}", value); }
+  using Ts::operator()...;
 };
 
 }// namespace util

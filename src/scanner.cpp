@@ -36,7 +36,7 @@ std::unordered_map<std::string_view, TokenType> const keywords{ { "and", TokenTy
 
 Scanner::Scanner(std::string_view source) : source(source) {}
 
-[[nodiscard]] bool Scanner::end_reached() const { return current >= source.length(); }
+bool Scanner::end_reached() const { return current >= source.length(); }
 
 char Scanner::advance()
 {
@@ -62,13 +62,13 @@ bool Scanner::match(char key)
   return true;
 }
 
-[[nodiscard]] char Scanner::peek() const
+char Scanner::peek() const
 {
   if (end_reached()) { return '\0'; }
   return source.at(current);
 }
 
-[[nodiscard]] char Scanner::peek_next() const
+char Scanner::peek_next() const
 {
   if (current + 1 >= source.length()) { return '\0'; }
   return source.at(current + 1);
@@ -195,15 +195,15 @@ void Scanner::scan_token()
   }
 }
 
-[[nodiscard]] ParsedTokens Scanner::scan()
+ParsedTokens Scanner::scan()
 {
   while (!end_reached()) {
     start = current;
     scan_token();
   }
 
-  tokens.push_back(Token{ .line = line, .type = TokenType::END_OF_FILE, .lexeme = "", .literal = std::nullopt });
-  return { .error = error, .tokens = tokens };
+  tokens.push_back(Token{ .line = line, .type = TokenType::END_OF_FILE, .lexeme = "" });
+  return { .error = error, .tokens = std::move(tokens) };
 }
 
 void Scanner::report(int line, std::string_view message)

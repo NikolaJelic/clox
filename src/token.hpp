@@ -12,5 +12,5 @@ struct Token
   int line{};
   TokenType type{};
   std::string lexeme;
-  std::optional<LiteralType> literal;
+  std::optional<LiteralType> literal = std::nullopt;
 };
